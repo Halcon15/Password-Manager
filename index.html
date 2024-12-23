@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Initialize master password from localStorage or prompt to set it
+        function initializeMasterPassword() {
+            const storedMasterPassword = localStorage.getItem("masterPassword");
+            if (!storedMasterPassword) {
+                showSetMasterPassword();
+            } else {
+                showLoginForm();
+            }
+        }
+
+        // Function to show the set master password section
+        function showSetMasterPassword() {
+            document.getElementById("set-master-password").classList.remove("hidden");
+            document.getElementById("login-form").classList.add("hidden");
+            document.getElementById("password-manager").classList.add("hidden");
+        }
+
+        // Function to show the login form
+        function showLoginForm() {
+            document.getElementById("set-master-password").classList.add("hidden");
+            document.getElementById("login-form").classList.remove("hidden");
+            document.getElementById("password-manager").classList.add("hidden");
+        }
+
+        // Function to show the password manager
+        function showPasswordManager() {
+            document.getElementById("set-master-password").classList.add("hidden");
+            document.getElementById("login-form").classList.add("hidden");
+            document.getElementById("password-manager").classList.remove("hidden");
+        }
+
+        // Function to set a new master password
+        function setMasterPassword() {
+            const newPassword = document.getElementById("newMasterPassword").value;
+            const confirmPassword = document.getElementById("confirmMasterPassword").value;
+
+            if (newPassword && newPassword === confirmPassword) {
+                localStorage.setItem("masterPassword", newPassword);
+                alert("Master password set successfully!");
+                showLoginForm();
+            } else {
+                alert("Passwords do not match or are empty. Please try again.");
+            }
+        }
+
+        // Function to validate the master password
+        function validatePassword() {
+            const inputPassword = document.getElementById("masterPassword").value;
+            const storedMasterPassword = localStorage.getItem("masterPassword");
+
+            if (inputPassword === storedMasterPassword) {
+                showPasswordManager();
+                loadPasswords();
+            } else {
+                alert("Incorrect master password!");
+            }
+        }
+
+        // Function to reset the master password
+        function resetMasterPassword() {
+            if (confirm("This will delete all saved passwords and reset the master password. Are you sure?")) {
+                localStorage.removeItem("masterPassword");
+                localStorage.removeItem("passwords");
+                showSetMasterPassword();
+                alert("Master password has been reset. Please set a new master password.");
+            }
+        }
+
+        // Function to load passwords from localStorage
+        function loadPasswords() {
+            const passwordBody = document.getElementById("passwordBody");
+            passwordBody.innerHTML = ''; // Clear the table body first
+
+            const storedPasswords = JSON.parse(localStorage.getItem("passwords")) || [];
+            storedPasswords.forEach((passwordEntry, index) => {
+                const row = passwordBody.insertRow(index);
+
+                const cellWebsite = row.insertCell(0);
+                const cellLoginId = row.insertCell(1);
+                const cellPassword = row.insertCell(2);
+
+                cellWebsite.textContent = passwordEntry.website;
+                cellLoginId.textContent = passwordEntry.loginId;
+                cellPassword.textContent = passwordEntry.password;
+            });
+        }
+
+        // Function to add a new password entry
+        function addPassword() {
+            const website = document.getElementById("website").value;
+            const loginId = document.getElementById("loginId").value;
+            const password = document.getElementById("password").value;
+
+            if (website && loginId && password) {
+                const newPassword = { website, loginId, password };
+
+                let storedPasswords = JSON.parse(localStorage.getItem("passwords")) || [];
+                storedPasswords.push(newPassword);
+                localStorage.setItem("passwords", JSON.stringify(storedPasswords));
+
+                loadPasswords(); // Refresh the table
+                clearInputFields(); // Clear input fields after adding
+            } else {
+                alert("Please fill out all fields.");
+            }
+        }
+
+        // Function to clear input fields
+        function clearInputFields() {
+            document.getElementById("website").value = '';
+            document.getElementById("loginId").value = '';
+            document.getElementById("password").value = '';
+        }
+
+        // Function to clear all passwords
+        function clearAllPasswords() {
+            localStorage.removeItem("passwords");
+            loadPasswords(); // Refresh the table
+        }
+    </script>
+</head>
+<body onload="initializeMasterPassword()">
+    <div class="container">
+        <!-- Set Master Password -->
+        <div id="set-master-password" class="hidden">
+            <h2>Set Master Password</h2>
+            <input type="password" id="newMasterPassword" placeholder="New Master Password" required>
+            <input type="password" id="confirmMasterPassword" placeholder="Confirm Master Password" required>
+            <button onclick="setMasterPassword()">Set Password</button>
+        </div>
+
+        <!-- Master Password Entry -->
+        <div id="login-form" class="login-form hidden">
+            <h2>Enter Master Password</h2>
+            <input type="password" id="masterPassword" placeholder="Master Password" required>
+            <button onclick="validatePassword()">Login</button>
+            <button onclick="resetMasterPassword()">Forgot Master Password</button>
+        </div>
+
+        <!-- Password Manager Table -->
+        <div id="password-manager" class="password-manager hidden">
+            <h2>Your Password Manager</h2>
+            <table id="passwordTable">
+                <thead>
+                    <tr>
+                        <th>Website</th>
+                        <th>Login ID</th>
+                        <th>Password</th>
+                    </tr>
+                </thead>
+                <tbody id="passwordBody">
+                    <!-- Rows will be inserted here dynamically -->
+                </tbody>
+            </table>
+
+            <h3>Add New Entry</h3>
+            <input type="text" id="website" placeholder="Website" required>
+            <input type="text" id="loginId" placeholder="Login ID" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button onclick="addPassword()">Add</button>
+            <br>
+            <br>
+            <button onclick="clearAllPasswords()">Clear All Passwords</button>
+        </div>
+    </div>
+</body>
+</html>
